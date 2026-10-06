@@ -9,15 +9,15 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Interim_Checkpoint_(Stage_2)-orange.svg)]()
 
-LEGO (**DeepSpatialRestorationNet**) is a residual image restoration network designed to remove composite, real-world image degradations (deblurring, denoising, demosaicing, and JPEG deblocking) in a single feed-forward pass.
+LEGO (**DeepSpatialRestorationNet**) is a residual image restoration network designed to remove composite, real-world image degradations (deblurring, denoising, demosaicing, and JPEG deblocking) in a single forward pass.
 
-It couples **Modulated Deformable Convolutions (DCNv2)** for spatially adaptive geometric feature alignment with **Restormer-style Transposed Cross-Covariance Attention Blocks** for long-range contextual aggregation.
+It couples **Modulated Deformable Convolutions (DCNv2)** for spatially adaptive geometric feature alignment with **Restormer-style Transposed Cross-Covariance Attention Blocks** for long-range context aggregation, using a residual formulation to recover sharp, clean outputs while preserving scene structure and color fidelity.
 
 ---
 
 ## ⚠️ Transparent Training Status & Disclosures
 
-We believe in scientific transparency. The released checkpoint (`LEGO_latest.pth`) is an **interim model** and is **not fully converged**. Please review the planned versus executed training history before interpreting any benchmark claim.
+We believe in scientific transparency. The released checkpoint (`LEGO_latest.pth`) is an **interim model** and is **not fully converged**. Please review the planned versus executed training history before treating it as a production-ready restoration model.
 
 | Training Stage | Objective & Data | Planned Budget | Actual Executed Status | Checkpoint Export |
 | :--- | :--- | :--- | :--- | :--- |
@@ -26,8 +26,8 @@ We believe in scientific transparency. The released checkpoint (`LEGO_latest.pth
 | **Stage 3: Perceptual GAN Fine-Tuning** | VGG19 Perceptual Loss + Spectral Norm U-Net Discriminator. | 80 Epochs | **Not Executed (Pending)** | N/A |
 
 ### What this means for performance:
-- **Strong Capabilities**: Good structural denoising, JPEG artifact suppression, and moderate motion/defocus deblurring. Color constancy and high-frequency structure are preserved comparatively well.
-- **Current Limitations**: Because Stage 3 (adversarial perceptual loss) was not executed, the model functions as a primarily L1/Charbonnier/frequency-regressed network. Fine textures and adversarially challenging cases remain limited.
+- **Strong Capabilities**: Good structural denoising, JPEG artifact suppression, and moderate motion/defocus deblurring. Color constancy and high-frequency structure are preserved comparatively well across many composite degradations.
+- **Current Limitations**: Because Stage 3 (adversarial perceptual loss) was not executed, the model functions as a primarily L1/Charbonnier/frequency-regressed network. Fine textures and adversarially complex scenes may still be under-optimized.
 
 ---
 
@@ -70,6 +70,14 @@ Input Image (RGB, [-1, 1])
 Residual Addition: Output = Input + Final_Residual
 ```
 
+- Architecture class: `DeepSpatialRestorationNet`
+- Embedding dimension: `128`
+- Parameters: `10,702,607`
+- DCN backend: `torchvision`
+- Attention heads: `4`
+- Output/input range: `[-1, 1]`
+- Tile inference: `256 x 256` with `64` overlap and `192` stride
+
 ---
 
 ## 📊 Benchmark & Empirical Evaluation
@@ -80,26 +88,26 @@ The benchmark data below is taken directly from the evaluation report for the `L
 
 | Degradation family | ΔPSNR (dB) | ΔSSIM | ΔMAE | Helped | Hurt | Tests | Verdict |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: | :--- |
-| TRAINING-MATCHED CONTROL | +2.8854 | +0.0320 | -0.0176 | 3 | 0 | 3 | GENERALLY HELPFUL |
-| GAUSSIAN BLUR | -2.7273 | -0.0057 | +0.0056 | 0 | 1 | 1 | GENERALLY HARMFUL |
-| STRONG GAUSSIAN BLUR | +4.2706 | +0.0365 | -0.0192 | 1 | 0 | 1 | GENERALLY HELPFUL |
-| MOTION BLUR | -1.5651 | -0.0035 | +0.0038 | 0 | 1 | 2 | GENERALLY HARMFUL |
-| DEFOCUS / OUT-OF-FOCUS | +5.2696 | +0.0199 | -0.0152 | 1 | 0 | 1 | GENERALLY HELPFUL |
-| SENSOR NOISE | +0.7134 | +0.0084 | -0.0131 | 1 | 0 | 1 | GENERALLY HELPFUL |
-| JPEG COMPRESSION | -8.1109 | -0.0201 | +0.0178 | 0 | 1 | 1 | GENERALLY HARMFUL |
-| BLUR + SENSOR NOISE | +3.3094 | +0.0147 | -0.0166 | 1 | 0 | 1 | GENERALLY HELPFUL |
-| BLUR + NOISE + JPEG | -2.2435 | -0.0042 | +0.0028 | 0 | 1 | 1 | GENERALLY HARMFUL |
-| DOWNSAMPLE + BLUR + NOISE + JPEG | +0.4543 | +0.0021 | -0.0018 | 0 | 0 | 1 | MIXED |
+| TRAINING-MATCHED CONTROL | +1.0406 | +0.0212 | -0.0080 | 3 | 0 | 3 | GENERALLY HELPFUL |
+| GAUSSIAN BLUR | +2.3329 | +0.0208 | -0.0091 | 1 | 0 | 1 | GENERALLY HELPFUL |
+| STRONG GAUSSIAN BLUR | +0.5564 | +0.0115 | -0.0034 | 1 | 0 | 1 | GENERALLY HELPFUL |
+| MOTION BLUR | +0.8785 | +0.0108 | -0.0040 | 2 | 0 | 2 | GENERALLY HELPFUL |
+| DEFOCUS / OUT-OF-FOCUS | +0.9964 | +0.0158 | -0.0058 | 1 | 0 | 1 | GENERALLY HELPFUL |
+| SENSOR NOISE | +6.1414 | +0.0367 | -0.0256 | 1 | 0 | 1 | GENERALLY HELPFUL |
+| JPEG COMPRESSION | -1.0010 | -0.0040 | +0.0024 | 0 | 1 | 1 | GENERALLY HARMFUL |
+| BLUR + SENSOR NOISE | +2.3937 | +0.0306 | -0.0157 | 1 | 0 | 1 | GENERALLY HELPFUL |
+| BLUR + NOISE + JPEG | +0.9680 | +0.0102 | -0.0049 | 1 | 0 | 1 | GENERALLY HELPFUL |
+| DOWNSAMPLE + BLUR + NOISE + JPEG | +0.3889 | +0.0057 | -0.0019 | 1 | 0 | 1 | GENERALLY HELPFUL |
 
 ### Unseen generalization
 
 | Metric | Value |
 | :--- | ---: |
-| mean ΔPSNR (dB) | -0.2195 |
-| mean ΔSSIM | +0.00445 |
-| helped rate | 0.4000 |
-| hurt rate | 0.4000 |
-| verdict | LIMITED / MIXED GENERALIZATION |
+| mean ΔPSNR (dB) | +1.4534 |
+| mean ΔSSIM | +0.0149 |
+| helped rate | 0.9000 |
+| hurt rate | 0.1000 |
+| verdict | SOME GENERALIZATION |
 
 ---
 
