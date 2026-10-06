@@ -1,5 +1,7 @@
 # LEGO: Deep Spatial Restoration Network
 
+[!sample]("images/gaussian_blur_comparison.png")
+
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-EE4C2C.svg?style=flat&logo=pytorch)](https://pytorch.org)
 [![CUDA](https://img.shields.io/badge/CUDA-Supported-76B900.svg?style=flat&logo=nvidia)](https://developer.nvidia.com/cuda-toolkit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
